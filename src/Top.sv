@@ -34,18 +34,20 @@ module Top (
   wire rpll_lock;
   wire rpll_clkout;
   wire rpll_clkoutp;
+  wire rpll_clkoutd;
 
   Gowin_rPLL rpll (
       .clkin(rpll_clkin),  // input clkin 27 MHz
       .lock(rpll_lock),  // output lock
       .clkout(rpll_clkout),  // output 81 MHz
-      .clkoutp(rpll_clkoutp)  // output clkout 81 MHz 90 degrees phased
+      .clkoutp(rpll_clkoutp),  // output clkout 81 MHz 90 degrees phased
+      .clkoutd(rpll_clkoutd) // output clkoutd 40.5 MHz (IPUG943-1.2E page 15)
   );
 
   // ----------------------------------------------------------
   // -- PSRAM_Memory_Interface_HS_V2_Top
   // ----------------------------------------------------------
-  wire br_clk_d = sys_clk;
+  wire br_clk_d = rpll_clkoutd;
   wire br_pll_lock = rpll_lock;
   wire br_memory_clk = rpll_clkout;
   wire br_memory_clk_p = rpll_clkoutp;

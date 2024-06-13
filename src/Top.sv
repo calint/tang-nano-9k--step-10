@@ -275,8 +275,8 @@ module Top (
 
         STATE_CACHE_TEST_2: begin
           if (cache_data_out_ready) begin
-            // if (cache_data_out == 32'h34_31_32_33) begin  // addr: 0x0
-            if (cache_data_out == 32'h63_62_61_0a) begin  // addr: 0x4
+            // if (cache_data_out == 32'h68_63_75_4d) begin  // addr: 0x0
+            if (cache_data_out == 32'h6f_64_41_20) begin  // addr: 0x4
               led[4:0] <= 5'b0_0000;
             end else begin
               led[0] <= 1'b0;

@@ -37,11 +37,11 @@ module Top (
   wire rpll_clkoutd;
 
   Gowin_rPLL rpll (
-      .clkin(rpll_clkin),  // input clkin 27 MHz
-      .lock(rpll_lock),  // output lock
-      .clkout(rpll_clkout),  // output 81 MHz
-      .clkoutp(rpll_clkoutp),  // output clkout 81 MHz 90 degrees phased
-      .clkoutd(rpll_clkoutd) // output clkoutd 40.5 MHz (IPUG943-1.2E page 15)
+      .clkin(rpll_clkin),  // 27 MHz
+      .lock(rpll_lock),
+      .clkout(rpll_clkout),  // 81 MHz
+      .clkoutp(rpll_clkoutp),  // clkout 81 MHz 90 degrees phased
+      .clkoutd(rpll_clkoutd)  // clkout / 4 (IPUG943-1.2E page 15)
   );
 
   // ----------------------------------------------------------
@@ -51,7 +51,7 @@ module Top (
   wire br_pll_lock = rpll_lock;
   wire br_memory_clk = rpll_clkout;
   wire br_memory_clk_p = rpll_clkoutp;
-  wire br_clk_out; // 40.5 MHz
+  wire br_clk_out;
   wire rst_n = sys_rst_n;
   wire [63:0] br_wr_data;
   wire [63:0] br_rd_data;
@@ -63,29 +63,29 @@ module Top (
   wire [7:0] br_data_mask;
 
   PSRAM_Memory_Interface_HS_V2_Top br (
-      .rst_n(rst_n),  // input rst_n
-      .clk_d(br_clk_d),  // input clk_d
-      .memory_clk(br_memory_clk),  // input memory_clk
-      .memory_clk_p(br_memory_clk_p),  // input memory_clk_p
-      .clk_out(br_clk_out),  // output clk_out
-      .pll_lock(br_pll_lock),  // input pll_lock
-      .init_calib(br_init_calib),  // output init_calib
+      .rst_n(rst_n),
+      .clk_d(br_clk_d),
+      .memory_clk(br_memory_clk),
+      .memory_clk_p(br_memory_clk_p),
+      .clk_out(br_clk_out),  // memory_clk / 2
+      .pll_lock(br_pll_lock),
+      .init_calib(br_init_calib),
 
-      .cmd(br_cmd),  // input cmd
-      .cmd_en(br_cmd_en),  // input cmd_en
-      .addr(br_addr),  // input [20:0] addr
-      .wr_data(br_wr_data),  // input [63:0] wr_data
-      .data_mask(br_data_mask),  // input [7:0] data_mask
-      .rd_data(br_rd_data),  // output [63:0] rd_data
-      .rd_data_valid(br_rd_data_valid),  // output rd_data_valid
+      .cmd(br_cmd),
+      .cmd_en(br_cmd_en),
+      .addr(br_addr),
+      .wr_data(br_wr_data),
+      .data_mask(br_data_mask),
+      .rd_data(br_rd_data),
+      .rd_data_valid(br_rd_data_valid),
 
       // inferred PSRAM ports
-      .O_psram_ck(O_psram_ck),  // output [1:0] O_psram_ck
-      .O_psram_ck_n(O_psram_ck_n),  // output [1:0] O_psram_ck_n
-      .IO_psram_dq(IO_psram_dq),  // inout [15:0] IO_psram_dq
-      .IO_psram_rwds(IO_psram_rwds),  // inout [1:0] IO_psram_rwds
-      .O_psram_cs_n(O_psram_cs_n),  // output [1:0] O_psram_cs_n
-      .O_psram_reset_n(O_psram_reset_n)  // output [1:0] O_psram_reset_n
+      .O_psram_ck(O_psram_ck),
+      .O_psram_ck_n(O_psram_ck_n),
+      .IO_psram_dq(IO_psram_dq),
+      .IO_psram_rwds(IO_psram_rwds),
+      .O_psram_cs_n(O_psram_cs_n),
+      .O_psram_reset_n(O_psram_reset_n)
   );
 
   localparam BURST_RAM_DEPTH_BITWIDTH = 21;
@@ -154,7 +154,7 @@ module Top (
   localparam STATE_CACHE_TEST_1 = 7;
   localparam STATE_CACHE_TEST_2 = 8;
   localparam STATE_DONE = 9;
-  
+
   reg [4:0] state = 0;
   reg [4:0] return_state = 0;
 

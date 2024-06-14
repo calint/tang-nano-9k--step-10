@@ -16,7 +16,9 @@ iverilog -g2005-sv -Winfloop -pfileline=1 -o iverilog.vvp -s Top \
     $SRCPTH/BESDPB.sv \
     $SRCPTH/Cache.sv \
     $SRCPTH/BurstRAM.sv \
-    $SRCPTH/Flash.sv \
+    $SRCPTH/RAMIO.sv \
+    $SRCPTH/UartRx.sv \
+    $SRCPTH/UartTx.sv \
     $SRCPTH/Top.sv
 
 vvp iverilog.vvp

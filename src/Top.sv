@@ -132,8 +132,6 @@ module Top (
       .br_rd_data_valid(br_rd_data_valid)  // rd_data is valid
   );
 
-  assign led[5] = ~ramio_busy;
-
   // ----------------------------------------------------------
   localparam STARTUP_WAIT = 1_000_000;
 
@@ -185,6 +183,8 @@ module Top (
       state <= STATE_INIT_POWER;
 
     end else begin
+      led[5] <= ~ramio_busy;
+
       case (state)
 
         STATE_INIT_POWER: begin
@@ -282,7 +282,6 @@ module Top (
             ramio_enable <= 1;
             ramio_read_type <= 3'b010;
             ramio_write_type <= 0;
-            ramio_address <= 0;
             ramio_address <= 4;
             state <= STATE_TEST_2;
           end
@@ -290,11 +289,10 @@ module Top (
 
         STATE_TEST_2: begin
           if (ramio_data_out_ready) begin
-            // if (cache_data_out == 32'h68_63_75_4d) begin  // addr: 0x0
-            if (ramio_data_out == 32'h00_00_41_20) begin  // addr: 0x4, half-words
+            if (ramio_data_out == 32'h00_00_41_20) begin  // addr: 0x4, half-word
               led[4:0] <= 5'b0_0000;
             end else begin
-              led[0] <= 1'b0;
+              led[4:0] <= 5'b1_1110;
             end
             state <= STATE_DONE;
           end

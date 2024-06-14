@@ -62,6 +62,9 @@ module RAMIO #(
     input wire br_rd_data_valid  // rd_data is valid
 );
 
+  // enables / disables RAM operation
+  reg ram_enable;
+
   // byte addressed into cache
   reg [ADDRESS_BITWIDTH-1:0] ram_address;
 
@@ -77,57 +80,64 @@ module RAMIO #(
   reg [1:0] addr_lower_w;
   always_comb begin
     // convert address to 4 byte word addressing in RAM
-    ram_address = {address[ADDRESS_BITWIDTH-1:2], 2'b00};
+    ram_address  = {address[ADDRESS_BITWIDTH-1:2], 2'b00};
     // save the lower bits
     addr_lower_w = address & 2'b11;
     // initiate result
+    ram_enable = 0;
     ram_write_enable = 0;
     ram_data_in = 0;
-    // convert to RAM interface
-    case (write_type)
-      2'b00: begin  // none
-        ram_write_enable = 4'b0000;
-      end
-      2'b01: begin  // byte
-        case (addr_lower_w)
-          2'b00: begin
-            ram_write_enable = 4'b0001;
-            ram_data_in[7:0] = data_in[7:0];
-          end
-          2'b01: begin
-            ram_write_enable  = 4'b0010;
-            ram_data_in[15:8] = data_in[7:0];
-          end
-          2'b10: begin
-            ram_write_enable   = 4'b0100;
-            ram_data_in[23:16] = data_in[7:0];
-          end
-          2'b11: begin
-            ram_write_enable   = 4'b1000;
-            ram_data_in[31:24] = data_in[7:0];
-          end
-        endcase
-      end
-      2'b10: begin  // half word
-        case (addr_lower_w)
-          2'b00: begin
-            ram_write_enable  = 4'b0011;
-            ram_data_in[15:0] = data_in[15:0];
-          end
-          2'b01: ;  // ? error
-          2'b10: begin
-            ram_write_enable   = 4'b1100;
-            ram_data_in[31:16] = data_in[15:0];
-          end
-          2'b11: ;  // ? error
-        endcase
-      end
-      2'b11: begin  // word
-        // ? assert(addr_lower_w==0)
-        ram_write_enable = 4'b1111;
-        ram_data_in = data_in;
-      end
-    endcase
+    if (address == ADDRESS_UART_OUT && write_type == 3'b001) begin
+      // write to UART, do not trigger cache
+    end else begin
+      // enable RAM
+      ram_enable = 1;
+      // convert input to RAM interface
+      case (write_type)
+        2'b00: begin  // none
+          ram_write_enable = 4'b0000;
+        end
+        2'b01: begin  // byte
+          case (addr_lower_w)
+            2'b00: begin
+              ram_write_enable = 4'b0001;
+              ram_data_in[7:0] = data_in[7:0];
+            end
+            2'b01: begin
+              ram_write_enable  = 4'b0010;
+              ram_data_in[15:8] = data_in[7:0];
+            end
+            2'b10: begin
+              ram_write_enable   = 4'b0100;
+              ram_data_in[23:16] = data_in[7:0];
+            end
+            2'b11: begin
+              ram_write_enable   = 4'b1000;
+              ram_data_in[31:24] = data_in[7:0];
+            end
+          endcase
+        end
+        2'b10: begin  // half word
+          case (addr_lower_w)
+            2'b00: begin
+              ram_write_enable  = 4'b0011;
+              ram_data_in[15:0] = data_in[15:0];
+            end
+            2'b01: ;  // ? error
+            2'b10: begin
+              ram_write_enable   = 4'b1100;
+              ram_data_in[31:16] = data_in[15:0];
+            end
+            2'b11: ;  // ? error
+          endcase
+        end
+        2'b11: begin  // word
+          // ? assert(addr_lower_w==0)
+          ram_write_enable = 4'b1111;
+          ram_data_in = data_in;
+        end
+      endcase
+    end
   end
 
   //
@@ -256,8 +266,10 @@ module RAMIO #(
       .RAM_DEPTH_BITWIDTH(RAM_DEPTH_BITWIDTH),
       .RAM_ADDRESSING_MODE(RAM_ADDRESSING_MODE)  // 64 bit words
   ) cache (
-      .clk(clk),
+      .clk  (clk),
       .rst_n(rst_n),
+
+      .enable(ram_enable),
       .address(ram_address),
       .data_out(ram_data_out),
       .data_out_ready(data_out_ready),

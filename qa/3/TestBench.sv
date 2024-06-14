@@ -61,6 +61,7 @@ module TestBench;
   reg [31:0] data_in;
   reg [3:0] write_enable;
   wire busy;
+  reg enable;
 
   Cache #(
       .LINE_IX_BITWIDTH(2),
@@ -69,6 +70,7 @@ module TestBench;
   ) cache (
       .clk(clkout),
       .rst_n(sys_rst_n && lock && br_init_calib),
+      .enable(enable),
       .address(address),
       .data_out(data_out),
       .data_out_ready(data_out_ready),
@@ -96,6 +98,7 @@ module TestBench;
     // wait for burst RAM to initiate
     while (br_busy || !lock) #clk_tk;
 
+    enable <= 1;
 
     address <= 0;
     address_next <= 0;

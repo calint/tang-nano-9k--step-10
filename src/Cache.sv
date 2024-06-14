@@ -34,6 +34,9 @@ module Cache #(
     input wire clk,
     input wire rst_n,
 
+    // enabled for cache to operate
+    input wire enable,
+
     // byte addressed; must be held while 'busy' + 1 cycle
     input wire [31:0] address,
 
@@ -260,7 +263,7 @@ module Cache #(
       case (state)
 
         STATE_IDLE: begin
-          if (!cache_line_hit && command_delay_interval_counter == 0) begin
+          if (enable && !cache_line_hit && command_delay_interval_counter == 0) begin
             // cache miss, start reading the addressed cache line
 `ifdef DBG
             $display("@(c) cache miss address 0x%h  line: %0d  write enable: %b", address, line_ix,

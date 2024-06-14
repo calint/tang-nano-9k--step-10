@@ -60,19 +60,22 @@ module TestBench;
   reg [31:0] data_in;
   reg [3:0] write_enable;
   wire busy;
+  reg enable;
 
   Cache #(
       .LINE_IX_BITWIDTH(1),
       .RAM_DEPTH_BITWIDTH(BURST_RAM_DEPTH_BITWIDTH),
       .RAM_ADDRESSING_MODE(3)  // 64 bit words
   ) cache (
-      .clk(clkout),
+      .clk  (clkout),
       .rst_n(sys_rst_n && lock && br_init_calib),
+
+      .enable(enable),
+      .write_enable(write_enable),
       .address(address),
       .data_out(data_out),
       .data_out_ready(data_out_ready),
       .data_in(data_in),
-      .write_enable(write_enable),
       .busy(busy),
 
       // burst ram wiring; prefix 'br_'
@@ -94,6 +97,9 @@ module TestBench;
 
     // wait for burst RAM to initiate
     while (br_busy || !lock) #clk_tk;
+
+    // keep enabled
+    enable <= 1;
 
     // read; cache miss
     while (busy) #clk_tk;

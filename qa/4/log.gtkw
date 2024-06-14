@@ -1,20 +1,19 @@
 [*]
 [*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
-[*] Fri Jun 14 16:12:22 2024
+[*] Fri Jun 14 17:39:54 2024
 [*]
 [dumpfile] "/home/c/w/tang-nano-9k--step-10/qa/4/log.vcd"
-[dumpfile_mtime] "Fri Jun 14 16:11:48 2024"
-[dumpfile_size] 21107
+[dumpfile_mtime] "Fri Jun 14 17:39:15 2024"
+[dumpfile_size] 29798
 [savefile] "/home/c/w/tang-nano-9k--step-10/qa/4/log.gtkw"
 [timestart] 0
 [size] 1910 1024
 [pos] -1 -1
-*-14.818875 46800 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-14.818875 2300 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] TestBench.
 [treeopen] TestBench.ramio.
-[treeopen] TestBench.ramio.cache.
 [sst_width] 269
-[signals_width] 238
+[signals_width] 244
 [sst_expanded] 1
 [sst_vpaned_height] 304
 @28
@@ -23,6 +22,7 @@ TestBench.clk
 TestBench.enable
 TestBench.read_type[2:0]
 @22
+TestBench.address[31:0]
 TestBench.data_in[31:0]
 TestBench.data_out[31:0]
 @28
@@ -34,14 +34,17 @@ TestBench.br_busy
 -burst ram
 @28
 TestBench.burst_ram.cmd_en
-@29
-TestBench.burst_ram.rd_data_valid
+@22
+TestBench.burst_ram.addr[3:0]
 @28
+TestBench.burst_ram.rd_data_valid
 TestBench.burst_ram.busy
 @22
 TestBench.burst_ram.state[4:0]
 @200
 -cache
+@29
+TestBench.ramio.cache.enable
 @c00022
 TestBench.ramio.cache.state[10:0]
 @28
@@ -58,16 +61,22 @@ TestBench.ramio.cache.state[10:0]
 (10)TestBench.ramio.cache.state[10:0]
 @1401200
 -group_end
+@22
+TestBench.ramio.cache.address[31:0]
+TestBench.ramio.cache.data_in[31:0]
 @28
 TestBench.ramio.cache.busy
 TestBench.ramio.cache.cache_line_hit
-@22
-TestBench.ramio.cache.cached_line_address[3:0]
-TestBench.ramio.cache.cached_tag[25:0]
-TestBench.ramio.cache.cached_tag_and_flags[31:0]
-@28
 TestBench.ramio.cache.data_out_ready
 @22
 TestBench.ramio.cache.data_out[31:0]
+@200
+-uart tx
+@22
+TestBench.ramio.uarttx.data[7:0]
+@28
+TestBench.ramio.uarttx.bsy
+TestBench.ramio.uarttx.go
+TestBench.ramio.uarttx.tx
 [pattern_trace] 1
 [pattern_trace] 0

@@ -6,7 +6,7 @@
 
 module TestBench;
 
-  localparam RAM_DEPTH_BITWIDTH = 4; // 2^4 * 8 B
+  localparam RAM_DEPTH_BITWIDTH = 4;  // 2^4 * 8 B
 
   reg sys_rst_n = 0;
   reg clk = 1;
@@ -56,10 +56,10 @@ module TestBench;
 
   RAMIO #(
       .RAM_DEPTH_BITWIDTH(RAM_DEPTH_BITWIDTH),
-      .RAM_ADDRESSING_MODE(3), // 64 bit word RAM
+      .RAM_ADDRESSING_MODE(3),  // 64 bit word RAM
       .CACHE_LINE_IX_BITWIDTH(1),
       .CLK_FREQ(20_250_000),
-      .BAUD_RATE(9600)
+      .BAUD_RATE(20_250_000)
   ) ramio (
       .rst_n(sys_rst_n && br_init_calib),
       .clk(clk),
@@ -142,7 +142,7 @@ module TestBench;
     address <= 17;
     data_in <= 32'hab;
     #clk_tk;
-    while(busy) #clk_tk;
+    while (busy) #clk_tk;
 
     // read unsigned byte; cache hit
     enable <= 1;
@@ -163,7 +163,7 @@ module TestBench;
     address <= 18;
     data_in <= 32'h1234;
     #clk_tk;
-    while(busy) #clk_tk;
+    while (busy) #clk_tk;
 
     // read unsigned half-word; cache hit
     enable <= 1;
@@ -184,7 +184,7 @@ module TestBench;
     address <= 20;
     data_in <= 32'habcd_1234;
     #clk_tk;
-    while(busy) #clk_tk;
+    while (busy) #clk_tk;
 
     // read word; cache hit
     enable <= 1;
@@ -198,7 +198,37 @@ module TestBench;
     if (data_out == 32'habcd_1234) $display("Test 6 passed");
     else $display("Test 6 FAILED");
 
+    // write to UART
+    enable <= 1;
+    address <= 32'hffff_fffe;
+    read_type <= 0;
+    write_type <= 2'b01;
+    // data_in <= 8'b1010_1010;
+    data_in <= 8'b1010_1010;
+    #clk_tk;
+
+    #clk_tk;
+    #clk_tk;
+    #clk_tk;
+    #clk_tk;
+    #clk_tk;
+    #clk_tk;
+    #clk_tk;
+    #clk_tk;
+    #clk_tk;
+    #clk_tk;
+    #clk_tk;
+    #clk_tk;
+    #clk_tk;
+    #clk_tk;
+    #clk_tk;
+    #clk_tk;
+    #clk_tk;
+    #clk_tk;
+    #clk_tk;
+    #clk_tk;
     $finish;
+
   end
 
 endmodule

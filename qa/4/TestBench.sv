@@ -251,6 +251,69 @@ module TestBench;
     if (ramio.uarttx.bsy == 0) $display("Test 17 passed");
     else $display("Test 17 FAILED");
 
+    // write unsigned byte; cache miss, eviction
+    enable <= 1;
+    read_type <= 0;
+    write_type <= 2'b01;
+    address <= 81;
+    data_in <= 32'hab;
+    #clk_tk;
+    while (busy) #clk_tk;
+
+    // read unsigned byte; cache hit
+    enable <= 1;
+    address <= 81;
+    read_type <= 3'b001;
+    write_type <= 0;
+    #clk_tk;
+
+    while (!data_out_ready) #clk_tk;
+
+    if (data_out == 32'h0000_00ab) $display("Test 18 passed");
+    else $display("Test 18 FAILED");
+
+    // write half-word; cache hit
+    enable <= 1;
+    read_type <= 0;
+    write_type <= 2'b10;
+    address <= 82;
+    data_in <= 32'h1234;
+    #clk_tk;
+    while (busy) #clk_tk;
+
+    // read unsigned half-word; cache hit
+    enable <= 1;
+    address <= 82;
+    read_type <= 3'b010;
+    write_type <= 0;
+    #clk_tk;
+
+    while (!data_out_ready) #clk_tk;
+
+    if (data_out == 32'h0000_1234) $display("Test 19 passed");
+    else $display("Test 19 FAILED");
+
+    // write word; cache hit
+    enable <= 1;
+    read_type <= 0;
+    write_type <= 2'b11;
+    address <= 84;
+    data_in <= 32'habcd_1234;
+    #clk_tk;
+    while (busy) #clk_tk;
+
+    // read word; cache hit
+    enable <= 1;
+    address <= 84;
+    read_type <= 3'b111;
+    write_type <= 0;
+    #clk_tk;
+
+    while (!data_out_ready) #clk_tk;
+
+    if (data_out == 32'habcd_1234) $display("Test 20 passed");
+    else $display("Test 20 FAILED");
+
     #clk_tk;
     #clk_tk;
     #clk_tk;

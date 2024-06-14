@@ -238,6 +238,18 @@ module TestBench;
     if (data_out == 32'hfeef8765 && data_out_ready) $display("Test 9 passed");
     else $display("Test 9 FAILED");
 
+    // read last element in the cache line
+    while (busy) #clk_tk;
+    address <= 32 - 4;
+    write_enable <= 0;
+    #clk_tk;
+
+    if (data_out_ready) $display("Test 14 passed");
+    else $display("Test 14 FAILED");
+
+    if (data_out == 32'h7D4E9F2C && data_out_ready) $display("Test 15 passed");
+    else $display("Test 15 FAILED");
+
     #clk_tk;
     #clk_tk;
     #clk_tk;

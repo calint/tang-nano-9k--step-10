@@ -198,7 +198,7 @@ module Cache #(
 `endif
       if (cache_line_hit) begin
 `ifdef DBG
-        $display("@(*) cache hit, set flag dirty");
+        $display("@(*) cache hit, set dirty flag");
 `endif
         // enable write tag with dirty bit set
         tag_write_enable = 4'b1111;
@@ -260,7 +260,7 @@ module Cache #(
           if (!cache_line_hit && command_delay_interval_counter == 0) begin
             // cache miss, start reading the addressed cache line
 `ifdef DBG
-            $display("@(c) cache miss address 0x%h  line: %0d  write mask: %b", address, line_ix,
+            $display("@(c) cache miss address 0x%h  line: %0d  write enable: %b", address, line_ix,
                      write_enable);
 `endif
             if (write_enable && line_dirty) begin

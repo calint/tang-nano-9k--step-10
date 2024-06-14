@@ -52,7 +52,7 @@ module TestBench;
   wire busy;
   wire [5:0] leds = 0;
   reg uart_tx;
-  wire uart_rx;
+  reg uart_rx = 0;
 
   RAMIO #(
       .RAM_DEPTH_BITWIDTH(RAM_DEPTH_BITWIDTH),
@@ -203,9 +203,14 @@ module TestBench;
     address <= 32'hffff_fffe;
     read_type <= 0;
     write_type <= 2'b01;
-    // data_in <= 8'b1010_1010;
     data_in <= 8'b1010_1010;
     #clk_tk;
+
+    // poll UART tx for done
+    enable <= 1;
+    address <= 32'hffff_fffe;
+    read_type <= 3'b001;
+    write_type <= 0;
 
     // start bit
     #clk_tk;
@@ -251,6 +256,54 @@ module TestBench;
     if (ramio.uarttx.bsy == 0) $display("Test 17 passed");
     else $display("Test 17 FAILED");
 
+    #clk_tk;
+
+    if (ramio.uarttx_data == 0) $display("Test 18 passed");
+    else $display("Test 18 FAILED");
+
+    // read from UART
+    enable <= 1;
+    address <= 32'hffff_fffd;
+    read_type <= 3'b001;
+    write_type <= 0;
+    #clk_tk;
+
+    // start bit
+    uart_rx <= 1;
+    #clk_tk;
+    // bit 0
+    uart_rx <= 0;
+    #clk_tk;
+    // bit 1
+    uart_rx <= 1;
+    #clk_tk;
+    // bit 2
+    uart_rx <= 0;
+    #clk_tk;
+    // bit 3
+    uart_rx <= 1;
+    #clk_tk;
+    // bit 4
+    uart_rx <= 0;
+    #clk_tk;
+    // bit 5
+    uart_rx <= 1;
+    #clk_tk;
+    // bit 6
+    uart_rx <= 0;
+    #clk_tk;
+    // bit 7
+    uart_rx <= 1;
+    #clk_tk;
+    // stop bit
+    uart_rx <= 1;
+    #clk_tk;
+    uart_rx <= 1;
+    #clk_tk;
+
+    if (ramio.uartrx_dr && ramio.uartrx_data_read == 8'h55) $display("Test 19 passed");
+    else $display("Test 19 FAILED");
+
     // write unsigned byte; cache miss, eviction
     enable <= 1;
     read_type <= 0;
@@ -269,8 +322,8 @@ module TestBench;
 
     while (!data_out_ready) #clk_tk;
 
-    if (data_out == 32'h0000_00ab) $display("Test 18 passed");
-    else $display("Test 18 FAILED");
+    if (data_out == 32'h0000_00ab) $display("Test 20 passed");
+    else $display("Test 20 FAILED");
 
     // write half-word; cache hit
     enable <= 1;
@@ -290,8 +343,8 @@ module TestBench;
 
     while (!data_out_ready) #clk_tk;
 
-    if (data_out == 32'h0000_1234) $display("Test 19 passed");
-    else $display("Test 19 FAILED");
+    if (data_out == 32'h0000_1234) $display("Test 21 passed");
+    else $display("Test 21 FAILED");
 
     // write word; cache hit
     enable <= 1;
@@ -311,8 +364,8 @@ module TestBench;
 
     while (!data_out_ready) #clk_tk;
 
-    if (data_out == 32'habcd_1234) $display("Test 20 passed");
-    else $display("Test 20 FAILED");
+    if (data_out == 32'habcd_1234) $display("Test 22 passed");
+    else $display("Test 22 FAILED");
 
     #clk_tk;
     #clk_tk;

@@ -278,6 +278,7 @@ module Top (
 
         STATE_TEST_1: begin
           if (!ramio_busy) begin
+            // read unsigned half-word (16 bits) from address 0x4
             ramio_enable <= 1;
             ramio_read_type <= 3'b010;
             ramio_write_type <= 0;
@@ -290,7 +291,7 @@ module Top (
         STATE_TEST_2: begin
           if (ramio_data_out_ready) begin
             // if (cache_data_out == 32'h68_63_75_4d) begin  // addr: 0x0
-            if (ramio_data_out == 32'h00_00_41_20) begin  // addr: 0x4
+            if (ramio_data_out == 32'h00_00_41_20) begin  // addr: 0x4, half-words
               led[4:0] <= 5'b0_0000;
             end else begin
               led[0] <= 1'b0;

@@ -135,12 +135,68 @@ module TestBench;
     if (data_out == 32'h0000_D5B8) $display("Test 3 passed");
     else $display("Test 3 FAILED");
 
-    $finish;
+    // write unsigned byte; cache hit
+    enable <= 1;
+    read_type <= 0;
+    write_type <= 2'b01;
+    address <= 17;
+    data_in <= 32'hab;
+    #clk_tk;
+    while(busy) #clk_tk;
 
+    // read unsigned byte; cache hit
+    enable <= 1;
+    address <= 17;
+    read_type <= 3'b001;
+    write_type <= 0;
     #clk_tk;
+
+    while (!data_out_ready) #clk_tk;
+
+    if (data_out == 32'h0000_00ab) $display("Test 4 passed");
+    else $display("Test 4 FAILED");
+
+    // write half-word; cache hit
+    enable <= 1;
+    read_type <= 0;
+    write_type <= 2'b10;
+    address <= 18;
+    data_in <= 32'h1234;
     #clk_tk;
+    while(busy) #clk_tk;
+
+    // read unsigned half-word; cache hit
+    enable <= 1;
+    address <= 18;
+    read_type <= 3'b010;
+    write_type <= 0;
     #clk_tk;
+
+    while (!data_out_ready) #clk_tk;
+
+    if (data_out == 32'h0000_1234) $display("Test 5 passed");
+    else $display("Test 5 FAILED");
+
+    // write word; cache hit
+    enable <= 1;
+    read_type <= 0;
+    write_type <= 2'b11;
+    address <= 20;
+    data_in <= 32'habcd_1234;
     #clk_tk;
+    while(busy) #clk_tk;
+
+    // read word; cache hit
+    enable <= 1;
+    address <= 20;
+    read_type <= 3'b111;
+    write_type <= 0;
+    #clk_tk;
+
+    while (!data_out_ready) #clk_tk;
+
+    if (data_out == 32'habcd_1234) $display("Test 6 passed");
+    else $display("Test 6 FAILED");
 
     $finish;
   end

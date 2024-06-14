@@ -207,17 +207,50 @@ module TestBench;
     data_in <= 8'b1010_1010;
     #clk_tk;
 
+    // start bit
     #clk_tk;
+    if (uart_tx == 0) $display("Test 7 passed");
+    else $display("Test 7 FAILED");
+    // bit 1
     #clk_tk;
+    if (uart_tx == 0) $display("Test 8 passed");
+    else $display("Test 8 FAILED");
+    // bit 2
     #clk_tk;
+    if (uart_tx == 1) $display("Test 9 passed");
+    else $display("Test 9 FAILED");
+    // bit 3
     #clk_tk;
+    if (uart_tx == 0) $display("Test 10 passed");
+    else $display("Test 10 FAILED");
+    // bit 4
     #clk_tk;
+    if (uart_tx == 1) $display("Test 11 passed");
+    else $display("Test 11 FAILED");
+    // bit 5
     #clk_tk;
+    if (uart_tx == 0) $display("Test 12 passed");
+    else $display("Test 12 FAILED");
+    // bit 6
     #clk_tk;
+    if (uart_tx == 1) $display("Test 13 passed");
+    else $display("Test 13 FAILED");
+    // bit 7
     #clk_tk;
+    if (uart_tx == 0) $display("Test 14 passed");
+    else $display("Test 14 FAILED");
+    // stop bit
     #clk_tk;
+    if (uart_tx == 1) $display("Test 15 passed");
+    else $display("Test 15 FAILED");
     #clk_tk;
+    if (uart_tx == 1) $display("Test 16 passed");
+    else $display("Test 16 FAILED");
+
     #clk_tk;
+    if (ramio.uarttx.bsy == 0) $display("Test 17 passed");
+    else $display("Test 17 FAILED");
+
     #clk_tk;
     #clk_tk;
     #clk_tk;

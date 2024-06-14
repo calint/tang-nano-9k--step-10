@@ -304,6 +304,21 @@ module TestBench;
     if (ramio.uartrx_dr && ramio.uartrx_data_read == 8'h55) $display("Test 19 passed");
     else $display("Test 19 FAILED");
 
+    if (data_out == 8'h55) $display("Test 20 passed");
+    else $display("Test 20 FAILED");
+
+    uart_rx <= 0;
+
+    // read from UART again, should be 0
+    enable <= 1;
+    address <= 32'hffff_fffd;
+    read_type <= 3'b001;
+    write_type <= 0;
+    #clk_tk;
+
+    if (data_out == 0) $display("Test 21 passed");
+    else $display("Test 21 FAILED");
+
     // write unsigned byte; cache miss, eviction
     enable <= 1;
     read_type <= 0;
@@ -322,8 +337,8 @@ module TestBench;
 
     while (!data_out_ready) #clk_tk;
 
-    if (data_out == 32'h0000_00ab) $display("Test 20 passed");
-    else $display("Test 20 FAILED");
+    if (data_out == 32'h0000_00ab) $display("Test 22 passed");
+    else $display("Test 22 FAILED");
 
     // write half-word; cache hit
     enable <= 1;
@@ -343,8 +358,8 @@ module TestBench;
 
     while (!data_out_ready) #clk_tk;
 
-    if (data_out == 32'h0000_1234) $display("Test 21 passed");
-    else $display("Test 21 FAILED");
+    if (data_out == 32'h0000_1234) $display("Test 23 passed");
+    else $display("Test 23 FAILED");
 
     // write word; cache hit
     enable <= 1;
@@ -364,8 +379,8 @@ module TestBench;
 
     while (!data_out_ready) #clk_tk;
 
-    if (data_out == 32'habcd_1234) $display("Test 22 passed");
-    else $display("Test 22 FAILED");
+    if (data_out == 32'habcd_1234) $display("Test 24 passed");
+    else $display("Test 24 FAILED");
 
     #clk_tk;
     #clk_tk;

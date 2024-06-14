@@ -16,10 +16,11 @@ module RAMIO #(
     parameter DATA_WIDTH = 32,
     parameter CLK_FREQ = 20_250_000,
     parameter BAUD_RATE = 9600,
-    parameter TOP_ADDRESS = {ADDRESS_BITWIDTH{1'b1}},  // +2 because of address being byte enabled
-    parameter ADDRESS_LEDS = TOP_ADDRESS,  // address of leds, 7 bits, rgb 4:6 enabled is off
-    parameter ADDRESS_UART_OUT = TOP_ADDRESS - 1,  // send byte address
-    parameter ADDRESS_UART_IN = TOP_ADDRESS - 2  // received byte address, must be read with 'lbu'
+    parameter TOP_ADDRESS = {ADDRESS_BITWIDTH{1'b1}},
+    parameter ADDRESS_LEDS = TOP_ADDRESS,
+    parameter ADDRESS_UART_OUT = TOP_ADDRESS - 1,
+    parameter ADDRESS_UART_IN = TOP_ADDRESS - 2
+    // note: received byte must be read with 'lbu'
 ) (
     input wire rst_n,
     input wire clk,
@@ -80,7 +81,7 @@ module RAMIO #(
   reg [1:0] addr_lower_w;
   always_comb begin
     // convert address to 4 byte word addressing in RAM
-    ram_address  = {address[ADDRESS_BITWIDTH-1:2], 2'b00};
+    ram_address = {address[ADDRESS_BITWIDTH-1:2], 2'b00};
     // save the lower bits
     addr_lower_w = address & 2'b11;
     // initiate result

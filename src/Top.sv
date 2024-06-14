@@ -25,8 +25,6 @@ module Top (
     output reg  flash_cs
 );
 
-  assign uart_tx = uart_rx;
-
   // ----------------------------------------------------------
   // -- Gowin_rPLLs
   // ----------------------------------------------------------
@@ -41,7 +39,7 @@ module Top (
       .lock(rpll_lock),
       .clkout(rpll_clkout),  // 81 MHz
       .clkoutp(rpll_clkoutp),  // clkout 81 MHz 90 degrees phased
-      .clkoutd(rpll_clkoutd)  // clkout / 4 (IPUG943-1.2E page 15)
+      .clkoutd(rpll_clkoutd)  // clkout / 4 = 20.25 MHz (IPUG943-1.2E page 15)
   );
 
   // ----------------------------------------------------------
@@ -88,44 +86,53 @@ module Top (
       .O_psram_reset_n(O_psram_reset_n)
   );
 
-  localparam BURST_RAM_DEPTH_BITWIDTH = 21;
+  localparam RAM_DEPTH_BITWIDTH = 21;
 
   // ----------------------------------------------------------
-  // -- Cache
+  // -- RAMIO
   // ----------------------------------------------------------
-  reg [31:0] cache_address;
-  wire [31:0] cache_data_out;
-  wire cache_data_out_ready;
-  reg [31:0] cache_data_in;
-  reg [3:0] cache_write_enable;
-  wire cache_busy;
+  reg ramio_enable;
+  reg [1:0] ramio_write_type;
+  reg [2:0] ramio_read_type;
+  reg [31:0] ramio_address;
+  reg [31:0] ramio_data_in;
+  wire [31:0] ramio_data_out;
+  wire ramio_data_out_ready;
+  wire ramio_busy;
+  reg [5:0] ramio_leds;
 
-  Cache #(
-      .LINE_IX_BITWIDTH(5),  // 1 KB cache (2 ^ 5 * 32 B)
-      .RAM_DEPTH_BITWIDTH(BURST_RAM_DEPTH_BITWIDTH),
-      .RAM_ADDRESSING_MODE(0)  // addressing 8 bit words
-  ) cache (
+  RAMIO #(
+      .RAM_DEPTH_BITWIDTH(RAM_DEPTH_BITWIDTH),
+      .RAM_ADDRESSING_MODE(0),  // addressing 8 bit words
+      .CACHE_LINE_IX_BITWIDTH(5),
+      .CLK_FREQ(20_250_000),
+      .BAUD_RATE(9_600)
+  ) ramio (
       .rst_n(sys_rst_n && rpll_lock && br_init_calib),
       .clk(br_clk_out),
+      .enable(ramio_enable),
+      .write_type(ramio_write_type),
+      .read_type(ramio_read_type),
+      .address(ramio_address),
+      .data_in(ramio_data_in),
+      .data_out(ramio_data_out),
+      .data_out_ready(ramio_data_out_ready),
+      .busy(ramio_busy),
+      .leds(ramio_leds),
+      .uart_tx(uart_tx),
+      .uart_rx(uart_rx),
 
-      .address(cache_address),
-      .data_in(cache_data_in),
-      .write_enable(cache_write_enable),
-      .data_out(cache_data_out),
-      .data_out_ready(cache_data_out_ready),
-      .busy(cache_busy),
-
-      // burst ram wiring; prefix 'br_'
-      .br_cmd(br_cmd),
-      .br_cmd_en(br_cmd_en),
-      .br_addr(br_addr),
-      .br_wr_data(br_wr_data),
-      .br_data_mask(br_data_mask),
-      .br_rd_data(br_rd_data),
-      .br_rd_data_valid(br_rd_data_valid)
+      // burst RAM wiring; prefix 'br_'
+      .br_cmd(br_cmd),  // 0: read, 1: write
+      .br_cmd_en(br_cmd_en),  // 1: cmd and addr is valid
+      .br_addr(br_addr),  // see 'RAM_ADDRESSING_MODE'
+      .br_wr_data(br_wr_data),  // data to write
+      .br_data_mask(br_data_mask),  // always 0 meaning write all bytes
+      .br_rd_data(br_rd_data),  // data out
+      .br_rd_data_valid(br_rd_data_valid)  // rd_data is valid
   );
 
-  assign led[5] = ~cache_busy;
+  assign led[5] = ~ramio_busy;
 
   // ----------------------------------------------------------
   localparam STARTUP_WAIT = 1_000_000;
@@ -142,17 +149,17 @@ module Top (
   reg [7:0] flash_data_in[4];
 
   // used while reading flash to increment 'cache_address'
-  reg [31:0] cache_address_next;
+  reg [31:0] ramio_address_next;
 
   localparam STATE_INIT_POWER = 0;
   localparam STATE_LOAD_CMD_TO_SEND = 1;
   localparam STATE_SEND = 2;
   localparam STATE_LOAD_ADDRESS_TO_SEND = 3;
   localparam STATE_READ_DATA = 4;
-  localparam STATE_START_WRITE_TO_CACHE = 5;
-  localparam STATE_WRITE_TO_CACHE = 6;
-  localparam STATE_CACHE_TEST_1 = 7;
-  localparam STATE_CACHE_TEST_2 = 8;
+  localparam STATE_START_WRITE = 5;
+  localparam STATE_WRITE = 6;
+  localparam STATE_TEST_1 = 7;
+  localparam STATE_TEST_2 = 8;
   localparam STATE_DONE = 9;
 
   reg [4:0] state = 0;
@@ -166,9 +173,12 @@ module Top (
       flash_mosi <= 0;
       flash_cs <= 1;
 
-      cache_address <= 0;
-      cache_address_next <= 0;
-      cache_write_enable <= 0;
+      ramio_enable <= 0;
+      ramio_read_type <= 0;
+      ramio_write_type <= 0;
+      ramio_address <= 0;
+      ramio_address_next <= 0;
+      ramio_data_in <= 0;
 
       led[4:0] <= 5'b1_1111;
 
@@ -229,7 +239,7 @@ module Top (
               flash_data_in[flash_current_byte_num] <= flash_current_byte_out;
               flash_current_byte_num <= flash_current_byte_num + 1;
               if (flash_current_byte_num == 3) begin
-                state <= STATE_START_WRITE_TO_CACHE;
+                state <= STATE_START_WRITE;
               end
             end
           end else begin
@@ -239,44 +249,48 @@ module Top (
           end
         end
 
-        STATE_START_WRITE_TO_CACHE: begin
-          if (!cache_busy) begin
-            cache_address <= cache_address_next;
-            cache_address_next <= cache_address_next + 4;
-            cache_data_in <= {
+        STATE_START_WRITE: begin
+          if (!ramio_busy) begin
+            ramio_enable <= 1;
+            ramio_read_type <= 0;
+            ramio_write_type <= 2'b11;
+            ramio_address <= ramio_address_next;
+            ramio_address_next <= ramio_address_next + 4;
+            ramio_data_in <= {
               flash_data_in[3], flash_data_in[2], flash_data_in[1], flash_data_in[0]
             };
-            cache_write_enable <= 4'b1111;
-            state <= STATE_WRITE_TO_CACHE;
+            state <= STATE_WRITE;
           end
         end
 
-        STATE_WRITE_TO_CACHE: begin
-          if (!cache_busy) begin
-            cache_write_enable <= 0;
+        STATE_WRITE: begin
+          if (!ramio_busy) begin
+            ramio_enable <= 0;
             flash_current_byte_num <= 0;
-            if (cache_address_next < FLASH_TRANSFER_BYTES_NUM) begin
+            if (ramio_address_next < FLASH_TRANSFER_BYTES_NUM) begin
               state <= STATE_READ_DATA;
             end else begin
               flash_cs <= 1;
-              state <= STATE_CACHE_TEST_1;
+              state <= STATE_TEST_1;
             end
           end
         end
 
-        STATE_CACHE_TEST_1: begin
-          if (!cache_busy) begin
-            // cache_address <= 0;
-            cache_address <= 4;
-            cache_write_enable <= 0;
-            state <= STATE_CACHE_TEST_2;
+        STATE_TEST_1: begin
+          if (!ramio_busy) begin
+            ramio_enable <= 1;
+            ramio_read_type <= 3'b010;
+            ramio_write_type <= 0;
+            ramio_address <= 0;
+            ramio_address <= 4;
+            state <= STATE_TEST_2;
           end
         end
 
-        STATE_CACHE_TEST_2: begin
-          if (cache_data_out_ready) begin
+        STATE_TEST_2: begin
+          if (ramio_data_out_ready) begin
             // if (cache_data_out == 32'h68_63_75_4d) begin  // addr: 0x0
-            if (cache_data_out == 32'h6f_64_41_20) begin  // addr: 0x4
+            if (ramio_data_out == 32'h00_00_41_20) begin  // addr: 0x4
               led[4:0] <= 5'b0_0000;
             end else begin
               led[0] <= 1'b0;

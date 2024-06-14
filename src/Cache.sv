@@ -72,7 +72,7 @@ module Cache #(
   localparam COLUMN_COUNT = 2 ** COLUMN_IX_BITWIDTH;
   localparam LINE_COUNT = 2 ** LINE_IX_BITWIDTH;
   localparam TAG_BITWIDTH = 32 - LINE_IX_BITWIDTH - COLUMN_IX_BITWIDTH - ZEROS_BITWIDTH;
-  // note: assumes there are 2 bits free after 'TAG_BITWIDTH' for 'valid' and 'dirty' flagss
+  // note: assumes there are 2 bits free after 'TAG_BITWIDTH' for 'valid' and 'dirty' flags
 
   localparam LINE_VALID_BIT = TAG_BITWIDTH;
   localparam LINE_DIRTY_BIT = TAG_BITWIDTH + 1;
@@ -205,8 +205,8 @@ module Cache #(
         tag_data_in = {1'b1, 1'b1, address_tag};
         // note: { dirty, valid, tag }
 
-        // connect 'data_in' to the input and set 'write_enable'
-        // for the addressed column in the cache line
+        // connect 'column_data_in' to the input and set 'column_write_enable'
+        //  for the addressed column in the cache line
         column_write_enable[column_ix] = write_enable;
         column_data_in[column_ix] = data_in;
       end else begin  // not (cache_line_hit)

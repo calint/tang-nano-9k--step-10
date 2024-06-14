@@ -42,7 +42,7 @@ module TestBench;
       .CYCLES_BEFORE_DATA_VALID(6)
   ) burst_ram (
       .clk(clkout),
-      .rst(!sys_rst_n || !lock),
+      .rst_n(sys_rst_n && lock),
       .cmd(br_cmd),  // 0: read, 1: write
       .cmd_en(br_cmd_en),  // 1: cmd and addr is valid
       .addr(br_addr),  // 8 bytes word
@@ -68,7 +68,7 @@ module TestBench;
       .RAM_ADDRESSING_MODE(3)  // 64 bit words
   ) cache (
       .clk(clkout),
-      .rst(!sys_rst_n || !lock || !br_init_calib),
+      .rst_n(sys_rst_n && lock && br_init_calib),
       .address(address),
       .data_out(data_out),
       .data_out_ready(data_out_ready),

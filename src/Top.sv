@@ -105,7 +105,7 @@ module Top (
       .RAM_DEPTH_BITWIDTH(BURST_RAM_DEPTH_BITWIDTH),
       .RAM_ADDRESSING_MODE(0)  // addressing 8 bit words
   ) cache (
-      .rst(!sys_rst_n || !rpll_lock || !br_init_calib),
+      .rst_n(sys_rst_n && rpll_lock && br_init_calib),
       .clk(br_clk_out),
 
       .address(cache_address),

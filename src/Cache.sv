@@ -4,6 +4,7 @@
 //
 // reviewed 2024-06-07
 // reviewed 2024-06-12
+// reviewed 2024-06-14
 
 `timescale 100ps / 100ps
 //
@@ -12,10 +13,10 @@
 // `define INFO
 
 module Cache #(
-    // cache lines 2 ^ value
+    // cache lines: 2 ^ value
     parameter LINE_IX_BITWIDTH = 8,
 
-    // bits in the address
+    // bits in the address interfacing with RAM
     parameter RAM_DEPTH_BITWIDTH = 21,
 
     // the clock cycles delay between commands
@@ -31,7 +32,7 @@ module Cache #(
     //       0: RAM has 8 bit words
 ) (
     input wire clk,
-    input wire rst,
+    input wire rst_n,
 
     // address must be held while busy + 1 cycle
     input wire [31:0] address,
@@ -40,19 +41,19 @@ module Cache #(
     output reg data_out_ready,
     input wire [31:0] data_in,
 
-    // write enable must be held while busy + 1 cycle
+    // write enable bytes must be held while busy + 1 cycle
     input wire [3:0] write_enable,
 
-    // asserted when busy reading / writing cache lines
+    // asserted when busy reading / writing cache line
     output wire busy,
 
     // burst RAM wiring; prefix 'br_'
     output reg br_cmd,  // 0: read, 1: write
     output reg br_cmd_en,  // 1: cmd and addr is valid
-    output reg [RAM_DEPTH_BITWIDTH-1:0] br_addr,  // 8 bytes word
+    output reg [RAM_DEPTH_BITWIDTH-1:0] br_addr,  // see 'RAM_ADDRESSING_MODE'
     output reg [63:0] br_wr_data,  // data to write
-    output wire [7:0] br_data_mask,  // not implemented (same as 0 in IP component)
-    input wire [63:0] br_rd_data,  // read data
+    output wire [7:0] br_data_mask,  // always 0 meaning write all bytes
+    input wire [63:0] br_rd_data,  // data out
     input wire br_rd_data_valid  // rd_data is valid
 );
 
@@ -71,6 +72,8 @@ module Cache #(
   localparam COLUMN_COUNT = 2 ** COLUMN_IX_BITWIDTH;
   localparam LINE_COUNT = 2 ** LINE_IX_BITWIDTH;
   localparam TAG_BITWIDTH = 32 - LINE_IX_BITWIDTH - COLUMN_IX_BITWIDTH - ZEROS_BITWIDTH;
+  // note: assumes there are 2 bits free after 'TAG_BITWIDTH' for 'valid' and 'dirty' flagss
+
   localparam LINE_VALID_BIT = TAG_BITWIDTH;
   localparam LINE_DIRTY_BIT = TAG_BITWIDTH + 1;
   localparam LINE_TO_RAM_ADDRESS_LEFT_SHIFT = COLUMN_IX_BITWIDTH + ZEROS_BITWIDTH - RAM_ADDRESSING_MODE;
@@ -78,7 +81,7 @@ module Cache #(
   // wires dividing the address into components
   // |tag|line| col |00| address
   //                |00| ignored (4 bytes word aligned)
-  //          | col |    column_ix: the index of the data in the cached line
+  //          | col |    column_ix: index of the data in the cached line
   //     |line|          line_ix: index in array where tag and cached data is stored
   // |tag|               address_tag: upper bits followed by 'valid' and 'dirty' flag
 
@@ -109,7 +112,7 @@ module Cache #(
   reg burst_is_writing;  // true if in burst write operation
 
   wire [31:0] cached_tag_and_flags;
-  reg [3:0] tag_write_enable;  // true when cache hit write to set line dirty
+  reg [3:0] tag_write_enable;  // true when cache hit; write to set line dirty
   reg [31:0] tag_data_in;  // tag and flags written when cache hit write
 
   assign br_data_mask = 0;  // writing whole cache lines
@@ -141,6 +144,10 @@ module Cache #(
 
   assign busy = !cache_line_hit || command_delay_interval_counter != 0;
 
+  // select data from requested column
+  assign data_out = column_data_out[column_ix];
+  assign data_out_ready = write_enable ? 0 : cache_line_hit;
+
   // 8 instances of byte enabled semi dual port RAM blocks
   // 'data_in' connected either to the input, if a cache hit write, 
   // or to the state machine that loads a cache line
@@ -149,7 +156,7 @@ module Cache #(
   wire [31:0] column_data_out[COLUMN_COUNT];
 
   generate
-    for (genvar i = 0; i < COLUMN_COUNT; i = i + 1) begin : column
+    for (genvar i = 0; i < COLUMN_COUNT; i++) begin : column
       BESDPB #(
           .ADDRESS_BITWIDTH(LINE_IX_BITWIDTH)
       ) column (
@@ -163,10 +170,6 @@ module Cache #(
   endgenerate
 
   always_comb begin
-    // select data from requested column
-    data_out = column_data_out[column_ix];
-    data_out_ready = write_enable ? 0 : cache_line_hit;
-
     // if it is a burst read of a cache line connect the 'write_enable[x]' to
     // the the state machine 'burst_write_enable[x]' register
     for (int i = 0; i < COLUMN_COUNT; i++) begin
@@ -234,8 +237,8 @@ module Cache #(
   localparam STATE_WRITE_3 = 11'b010_0000_0000;
   localparam STATE_WRITE_FINISH = 11'b100_0000_0000;
 
-  always_ff @(posedge clk) begin
-    if (rst) begin
+  always_ff @(posedge clk, negedge rst_n) begin
+    if (!rst_n) begin
       burst_tag_write_enable <= 0;
       for (int i = 0; i < COLUMN_COUNT; i++) begin
         burst_write_enable[i] <= 0;

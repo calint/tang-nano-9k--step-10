@@ -14,7 +14,7 @@ module TestBench;
       .CYCLES_BEFORE_DATA_VALID(4)
   ) dut (
       .clk(clk),
-      .rst(rst),
+      .rst_n(rst_n),
       .cmd(cmd),
       .cmd_en(cmd_en),
       .addr(addr),
@@ -37,7 +37,7 @@ module TestBench;
   reg clk = 0;
   always #(clk_tk / 2) clk = ~clk;
 
-  reg rst = 1;
+  reg rst_n = 0;
 
   initial begin
     $dumpfile("log.vcd");
@@ -46,7 +46,7 @@ module TestBench;
     // reset
     #clk_tk;
     #(clk_tk / 2);
-    rst = 0;
+    rst_n <= 1;
 
     // wait for initiation to complete
     while (busy) #clk_tk;

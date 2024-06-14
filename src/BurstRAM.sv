@@ -18,7 +18,7 @@ module BurstRAM #(
     parameter CYCLES_BEFORE_DATA_VALID = 6  // emulates read delay
 ) (
     input wire clk,
-    input wire rst,
+    input wire rst_n,
     input wire cmd,  // 0: read, 1: write
     input wire cmd_en,  // 1: cmd and addr is valid
     input wire [DEPTH_BITWIDTH-1:0] addr,  // 8 bytes word
@@ -72,8 +72,8 @@ module BurstRAM #(
     end
   end
 
-  always @(posedge clk) begin
-    if (rst) begin
+  always @(posedge clk, negedge rst_n) begin
+    if (!rst_n) begin
       rd_data_valid <= 0;
       rd_data <= 0;
       busy <= 1;

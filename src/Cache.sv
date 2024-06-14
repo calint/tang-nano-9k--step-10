@@ -34,7 +34,7 @@ module Cache #(
     input wire clk,
     input wire rst_n,
 
-    // address must be held while busy + 1 cycle
+    // byte addressed; must be held while 'busy' + 1 cycle
     input wire [31:0] address,
 
     output reg [31:0] data_out,
@@ -246,6 +246,9 @@ module Cache #(
       command_delay_interval_counter <= 0;
       state <= STATE_IDLE;
     end else begin
+`ifdef DBG
+      $display("@(c) state: %0d", state);
+`endif
       // count down command interval
       if (command_delay_interval_counter != 0) begin
 `ifdef DBG
@@ -306,6 +309,10 @@ module Cache #(
             burst_write_enable[1] <= 4'b1111;
             burst_data_in[1] <= br_rd_data[63:32];
             state <= STATE_READ_1;
+          end else begin  // not (br_rd_data_valid)
+`ifdef DBG
+            $display("@(c) waiting for data valid from RAM");
+`endif
           end
         end
 

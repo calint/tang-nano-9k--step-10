@@ -170,8 +170,6 @@ module Cache #(
   endgenerate
 
   always_comb begin
-    // if it is a burst read of a cache line connect the 'write_enable[x]' to
-    // the the state machine 'burst_write_enable[x]' register
     for (int i = 0; i < COLUMN_COUNT; i++) begin
       column_write_enable[i] = 0;
       column_data_in[i] = 0;

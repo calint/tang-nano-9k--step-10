@@ -73,13 +73,17 @@ module RAMIO #(
 
   wire [DATA_WIDTH-1:0] ram_data_out;
 
-  // convert data type to byte enabled write 
+  // convert 'data_in' from 'write_type' to byte enabled 4 bytes RAM write 
   reg [1:0] addr_lower_w;
   always_comb begin
+    // convert address to 4 byte word addressing in RAM
     ram_address = {address[ADDRESS_BITWIDTH-1:2], 2'b00};
+    // save the lower bits
     addr_lower_w = address & 2'b11;
+    // initiate result
     ram_write_enable = 0;
     ram_data_in = 0;
+    // convert to RAM interface
     case (write_type)
       2'b00: begin  // none
         ram_write_enable = 4'b0000;
@@ -126,7 +130,10 @@ module RAMIO #(
     endcase
   end
 
-  // uarttx
+  //
+  // UartTx
+  //
+
   // data being written
   reg [7:0] uarttx_data;
 
@@ -136,7 +143,10 @@ module RAMIO #(
   // enabled if UART is sending data
   wire uarttx_bsy;
 
-  // uartrx
+  //
+  // UartRx
+  //
+
   // data ready
   wire uartrx_dr;
 
@@ -149,13 +159,15 @@ module RAMIO #(
   // complete data from 'uartrx_data' when 'uartrx_dr' (data ready) enabled
   reg [7:0] uartrx_data_read;
 
-  // convert data in to IO
+  // 
+  // convert 'data_in' to 4 bytes enabled RAM and I/O
+  //
   always_comb begin
 `ifdef DBG
     $display("address: %h  read_type: %b", address, read_type);
 `endif
     //    data_out = 0; // ? note. uncommenting this creates infinite loop when simulating with iverilog
-    // create the 'data_out' based on the 'address' from previous cycle
+    // create the 'data_out' based on the 'address'
     if (address == ADDRESS_UART_OUT && read_type == 3'b001) begin
       // read unsigned byte from uart_tx
       data_out = {{24{1'b0}}, uarttx_data};
@@ -209,7 +221,7 @@ module RAMIO #(
       uartrx_data_read <= 0;
       uartrx_go <= 1;
     end else begin
-      // if previous command was a read from uart then reset the read data
+      // if read from UART then reset the read data
       if (address == ADDRESS_UART_IN && read_type == 3'b001) begin
         uartrx_data_read <= 0;
       end

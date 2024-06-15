@@ -1,6 +1,6 @@
 `timescale 100ps / 100ps
 //
-// RAMIO + BurstRAM
+// Flash
 //
 `default_nettype none
 
@@ -8,117 +8,117 @@ module TestBench;
 
   localparam RAM_DEPTH_BITWIDTH = 4;  // 2^4 * 8 B
 
-  reg sys_rst_n = 0;
+  reg sys_rst_n = 1;
   reg clk = 1;
   localparam clk_tk = 36;
-  always #(clk_tk / 2) clk = ~clk;
+  localparam clk_tk_half = clk_tk / 2;
+  always #(clk_tk_half) clk = ~clk;
 
-  wire br_cmd;
-  wire br_cmd_en;
-  wire [RAM_DEPTH_BITWIDTH-1:0] br_addr;
-  wire [63:0] br_wr_data;
-  wire [7:0] br_data_mask;
-  wire [63:0] br_rd_data;
-  wire br_rd_data_valid;
-  wire br_init_calib;
-  wire br_busy;
+  //-------------------------------------------------
+  output reg flash_clk;
+  input wire flash_miso;
+  output reg flash_mosi;
+  output reg flash_cs;
 
-  BurstRAM #(
-      .DATA_FILE("RAM.mem"),  // initial RAM content
-      .DEPTH_BITWIDTH(RAM_DEPTH_BITWIDTH),  // 2 ^ 4 * 8 B entries
-      .BURST_COUNT(4),  // 4 * 64 bit data per burst
-      .CYCLES_BEFORE_DATA_VALID(6)
-  ) burst_ram (
-      .clk(clk),
+  Flash #(
+      .DATA_FILE("flash.mem"),
+      .DEPTH_BITWIDTH(6)
+  ) dut (
       .rst_n(sys_rst_n),
-      .cmd(br_cmd),  // 0: read, 1: write
-      .cmd_en(br_cmd_en),  // 1: cmd and addr is valid
-      .addr(br_addr),  // 8 bytes word
-      .wr_data(br_wr_data),  // data to write
-      .data_mask(br_data_mask),  // not implemented (same as 0 in IP component)
-      .rd_data(br_rd_data),  // read data
-      .rd_data_valid(br_rd_data_valid),  // rd_data is valid
-      .init_calib(br_init_calib),
-      .busy(br_busy)
+      .clk(flash_clk),
+      .miso(flash_miso),
+      .mosi(flash_mosi),
+      .cs(flash_cs)
   );
+  //-------------------------------------------------
 
-  reg enable = 0;
-  reg [1:0] write_type = 0;
-  reg [2:0] read_type = 0;
-  reg [31:0] address = 0;
-  wire [31:0] data_out;
-  wire data_out_ready;
-  reg [31:0] data_in = 0;
-  wire busy;
-  wire [5:0] leds = 0;
-  reg uart_tx;
-  reg uart_rx = 0;
-
-  RAMIO #(
-      .RAM_DEPTH_BITWIDTH(RAM_DEPTH_BITWIDTH),
-      .RAM_ADDRESSING_MODE(3),  // 64 bit word RAM
-      .CACHE_LINE_IX_BITWIDTH(1),
-      .CLK_FREQ(20_250_000),
-      .BAUD_RATE(20_250_000)
-  ) ramio (
-      .rst_n(sys_rst_n && br_init_calib),
-      .clk(clk),
-      .enable(enable),
-      .write_type(write_type),
-      .read_type(read_type),
-      .address(address),
-      .data_in(data_in),
-      .data_out(data_out),
-      .data_out_ready(data_out_ready),
-      .busy(busy),
-      .leds(leds[5:2]),
-      .uart_tx(uart_tx),
-      .uart_rx(uart_rx),
-
-      // burst RAM wiring; prefix 'br_'
-      .br_cmd(br_cmd),  // 0: read, 1: write
-      .br_cmd_en(br_cmd_en),  // 1: cmd and addr is valid
-      .br_addr(br_addr),  // see 'RAM_ADDRESSING_MODE'
-      .br_wr_data(br_wr_data),  // data to write
-      .br_data_mask(br_data_mask),  // always 0 meaning write all bytes
-      .br_rd_data(br_rd_data),  // data out
-      .br_rd_data_valid(br_rd_data_valid)  // rd_data is valid
-  );
-
-  Core core (
-      .rst_n(sys_rst_n && br_init_calib),
-      .clk  (clk),
-      .led  (led[1:0]),
-
-      .ramio_enable(ramio_enable),
-      .ramio_write_type(ramio_write_type),
-      .ramio_read_type(ramio_read_type),
-      .ramio_address(ramio_address),
-      .ramio_data_in(ramio_data_in),
-      .ramio_data_out(ramio_data_out),
-      .ramio_data_out_ready(ramio_data_out_ready),
-      .ramio_busy(ramio_busy),
-
-      .flash_clk (flash_clk),
-      .flash_miso(flash_miso),
-      .flash_mosi(flash_mosi),
-      .flash_cs  (flash_cs)
-  );
+  reg [7:0] received_byte = 0;
 
   initial begin
     $dumpfile("log.vcd");
     $dumpvars(0, TestBench);
 
-    #clk_tk;
+    sys_rst_n <= 0;
     #clk_tk;
     sys_rst_n <= 1;
     #clk_tk;
 
-    // wait for burst RAM to initiate
-    while (br_busy) #clk_tk;
+    //----------------------------------------------------------
+    flash_cs   <= 0;
 
-    if (br_busy == 0) $display("Test 1 passed");
-    else $display("Test 1 FAILED");
+    // send 8 bits command 0x3
+    flash_mosi <= 0;  // bit 7
+    flash_clk  <= 1;
+    #clk_tk_half;
+    flash_clk <= 0;
+    #clk_tk_half;
+
+    flash_mosi <= 0;  // bit 6
+    flash_clk  <= 1;
+    #clk_tk_half;
+    flash_clk <= 0;
+    #clk_tk_half;
+
+    flash_mosi <= 0;  // bit 5
+    flash_clk  <= 1;
+    #clk_tk_half;
+    flash_clk <= 0;
+    #clk_tk_half;
+
+    flash_mosi <= 0;  // bit 4
+    flash_clk  <= 1;
+    #clk_tk_half;
+    flash_clk <= 0;
+    #clk_tk_half;
+
+    flash_mosi <= 0;  // bit 3
+    flash_clk  <= 1;
+    #clk_tk_half;
+    flash_clk <= 0;
+    #clk_tk_half;
+
+    flash_mosi <= 0;  // bit 2
+    flash_clk  <= 1;
+    #clk_tk_half;
+    flash_clk <= 0;
+    #clk_tk_half;
+
+    flash_mosi <= 1;  // bit 1
+    flash_clk  <= 1;
+    #clk_tk_half;
+    flash_clk <= 0;
+    #clk_tk_half;
+
+    flash_mosi <= 1;  // bit 0
+    flash_clk  <= 1;
+    #clk_tk_half;
+    flash_clk <= 0;
+    #clk_tk_half;
+
+    // send adress 0x0
+    for (int i = 0; i < 24; i++) begin
+      flash_mosi <= 0;
+      flash_clk  <= 1;
+      #clk_tk_half;
+      flash_clk <= 0;
+      #clk_tk_half;
+    end
+
+    // receive bytes
+    for (int i = 0; i < 16; i++) begin
+      for (int j = 0; j < 8; j++) begin
+        flash_clk <= 0;
+        #clk_tk_half;
+        // $display("miso: %0d", flash_miso);
+        received_byte <= {received_byte[6:0], flash_miso};
+        flash_clk <= 1;
+        #clk_tk_half;
+      end
+      if (dut.data[i] == received_byte) $display("Test %0d passed", i + 1);
+      else $display("Test %0d FAILED", i + 1);
+    end
+
+    //----------------------------------------------------------
 
     $finish;
 

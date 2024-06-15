@@ -1,0 +1,103 @@
+[*]
+[*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
+[*] Fri Jun 14 22:08:44 2024
+[*]
+[dumpfile] "/home/c/w/tang-nano-9k--step-10/qa/4/log.vcd"
+[dumpfile_mtime] "Fri Jun 14 22:08:03 2024"
+[dumpfile_size] 40967
+[savefile] "/home/c/w/tang-nano-9k--step-10/qa/4/log.gtkw"
+[timestart] 0
+[size] 1910 1024
+[pos] -1 -1
+*-15.058998 219600 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] TestBench.
+[treeopen] TestBench.ramio.
+[treeopen] TestBench.ramio.uarttx.
+[sst_width] 269
+[signals_width] 244
+[sst_expanded] 1
+[sst_vpaned_height] 304
+@28
+TestBench.sys_rst_n
+TestBench.clk
+TestBench.enable
+TestBench.read_type[2:0]
+@22
+TestBench.address[31:0]
+TestBench.data_in[31:0]
+TestBench.data_out[31:0]
+@28
+TestBench.data_out_ready
+TestBench.busy
+TestBench.data_out_ready
+TestBench.br_busy
+@200
+-ramio
+@22
+TestBench.ramio.uartrx_data[7:0]
+@28
+TestBench.ramio.uartrx_go
+@29
+TestBench.ramio.uartrx_dr
+@28
+TestBench.ramio.uarttx_bsy
+TestBench.ramio.uarttx_go
+@200
+-burst ram
+@28
+TestBench.burst_ram.cmd_en
+@22
+TestBench.burst_ram.addr[3:0]
+@28
+TestBench.burst_ram.rd_data_valid
+TestBench.burst_ram.busy
+@22
+TestBench.burst_ram.state[4:0]
+@200
+-cache
+@28
+TestBench.ramio.cache.enable
+@c00022
+TestBench.ramio.cache.state[10:0]
+@28
+(0)TestBench.ramio.cache.state[10:0]
+(1)TestBench.ramio.cache.state[10:0]
+(2)TestBench.ramio.cache.state[10:0]
+(3)TestBench.ramio.cache.state[10:0]
+(4)TestBench.ramio.cache.state[10:0]
+(5)TestBench.ramio.cache.state[10:0]
+(6)TestBench.ramio.cache.state[10:0]
+(7)TestBench.ramio.cache.state[10:0]
+(8)TestBench.ramio.cache.state[10:0]
+(9)TestBench.ramio.cache.state[10:0]
+(10)TestBench.ramio.cache.state[10:0]
+@1401200
+-group_end
+@22
+TestBench.ramio.cache.address[31:0]
+TestBench.ramio.cache.data_in[31:0]
+TestBench.ramio.cache.write_enable[3:0]
+@28
+TestBench.ramio.cache.busy
+TestBench.ramio.cache.cache_line_hit
+TestBench.ramio.cache.data_out_ready
+@22
+TestBench.ramio.cache.data_out[31:0]
+@200
+-uart tx
+@28
+TestBench.ramio.uarttx.state[2:0]
+@22
+TestBench.ramio.uarttx.data[7:0]
+@28
+TestBench.ramio.uarttx.bsy
+TestBench.ramio.uarttx.go
+TestBench.ramio.uarttx.tx
+@200
+-uart rx
+@28
+TestBench.uart_rx
+@24
+TestBench.ramio.uartrx.state[2:0]
+[pattern_trace] 1
+[pattern_trace] 0

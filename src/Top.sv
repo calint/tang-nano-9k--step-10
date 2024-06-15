@@ -120,7 +120,7 @@ module Top (
       .data_out_ready(ramio_data_out_ready),
       .busy(ramio_busy),
 
-      .leds(led[5:2]),
+      .leds(led[4:2]),
 
       // UART
       .uart_tx(uart_tx),
@@ -159,6 +159,8 @@ module Top (
       .flash_mosi(flash_mosi),
       .flash_cs  (flash_cs)
   );
+
+  assign led[5] = ~ramio_busy;
 
 endmodule
 

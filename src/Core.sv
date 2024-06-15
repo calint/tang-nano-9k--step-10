@@ -8,22 +8,22 @@ module Core (
     output reg [1:0] led,
 
     // RAMIO
-    output wire ramio_enable,
+    output reg ramio_enable,
 
     // b00 not a write; b01: byte, b10: half word, b11: word
-    output wire [1:0] ramio_write_type,
+    output reg [1:0] ramio_write_type,
 
     // b000 not a read; bit[2] flags sign extended or not, b01: byte, b10: half word, b11: word
-    output wire [2:0] ramio_read_type,
+    output reg [2:0] ramio_read_type,
 
     // address in bytes
-    output wire [ADDRESS_BITWIDTH-1:0] ramio_address,
+    output reg [31:0] ramio_address,
 
     // sign extended byte, half word, word
-    output wire [DATA_WIDTH-1:0] ramio_data_in,
+    output reg [31:0] ramio_data_in,
 
     // data at 'address' according to 'read_type'
-    input wire [DATA_WIDTH-1:0] ramio_data_out,
+    input wire [31:0] ramio_data_out,
 
     input wire ramio_data_out_ready,
 
@@ -86,7 +86,6 @@ module Core (
       state <= STATE_INIT_POWER;
 
     end else begin
-      led[5] <= ~ramio_busy;
 
       case (state)
 
@@ -193,9 +192,9 @@ module Core (
         STATE_TEST_2: begin
           if (ramio_data_out_ready) begin
             if (ramio_data_out == 32'h00_00_41_20) begin  // addr: 0x4, half-word
-              led[4:0] <= 5'b0_0000;
+              led[1:0] <= 2'b00;
             end else begin
-              led[4:0] <= 5'b1_1110;
+              led[1:0] <= 2'b11;
             end
             state <= STATE_DONE;
           end
